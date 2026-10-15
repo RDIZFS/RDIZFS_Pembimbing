@@ -318,3 +318,36 @@ export const INITIAL_REVISIONS: RevisiTask[] = [
     status: 'belum_dikerjakan',
   },
 ];
+
+export const INITIAL_AGENT_LOGS = [
+  {
+    id: 'log-1',
+    timestamp: '2026-10-14 09:15',
+    agentName: 'Pemeriksa Revisi' as const,
+    action: 'Analisis kelayakan berkas naskah revisi Bab 4 Farhan Maulana',
+    targetStudent: 'Farhan Maulana (2201842)',
+    reason: 'Pemeriksaan lampiran output SPSS dan tabel hasil uji hipotesis sesuai catatan bimbingan',
+    decision: 'Diverifikasi' as const,
+    notes: 'Dosen meninjau checklist AI (3/3 tampak terpenuhi) lalu menyetujui verifikasi final.',
+  },
+  {
+    id: 'log-2',
+    timestamp: '2026-10-13 14:30',
+    agentName: 'Pengingat Proaktif' as const,
+    action: 'Penyusunan dan pengiriman pengingat batas tenggat revisi Putri Anggraini',
+    targetStudent: 'Putri Anggraini (2106334)',
+    reason: 'Tenggat perbaikan instrumen uji kelayakan bahan ajar digital terlewat 3 hari',
+    decision: 'Diedit & Terkirim' as const,
+    notes: 'Dosen menambahkan catatan opsi jadwal konsultasi hari Kamis sebelum menyetujui kirim.',
+  },
+  {
+    id: 'log-3',
+    timestamp: '2026-10-12 08:00',
+    agentName: 'Briefing Mingguan' as const,
+    action: 'Pembuatan briefing mingguan portofolio 9 mahasiswa bimbingan',
+    reason: 'Identifikasi 3 mahasiswa prioritas tinggi untuk evaluasi tengah semester',
+    decision: 'Ditinjau' as const,
+    notes: 'Dosen meninjau analisis ringkasan dan menetapkan fokus penanganan mahasiswa terlambat.',
+  },
+];
+

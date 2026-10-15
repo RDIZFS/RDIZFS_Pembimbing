@@ -5,6 +5,8 @@ import { Role, Student } from '../types';
 interface HeaderProps {
   currentRole: Role;
   onRoleChange: (role: Role) => void;
+  dosenTab: 'dashboard' | 'asisten_ai';
+  onDosenTabChange: (tab: 'dashboard' | 'asisten_ai') => void;
   selectedStudentId: string;
   onStudentChange: (studentId: string) => void;
   students: Student[];
@@ -14,6 +16,8 @@ interface HeaderProps {
 export const Header: React.FC<HeaderProps> = ({
   currentRole,
   onRoleChange,
+  dosenTab,
+  onDosenTabChange,
   selectedStudentId,
   onStudentChange,
   students,
@@ -85,6 +89,35 @@ export const Header: React.FC<HeaderProps> = ({
                     </option>
                   ))}
                 </select>
+              </div>
+            )}
+
+            {/* Dosen Navigation Tabs (Dashboard vs Asisten AI) */}
+            {currentRole === 'dosen' && (
+              <div className="flex items-center gap-1 border-l border-slate-200 pl-2 sm:pl-3 ml-1 sm:ml-2">
+                <button
+                  type="button"
+                  onClick={() => onDosenTabChange('dashboard')}
+                  className={`px-2.5 sm:px-3 py-1.5 text-xs font-semibold rounded-md transition-all whitespace-nowrap ${
+                    dosenTab === 'dashboard'
+                      ? 'bg-slate-900 text-white shadow-xs'
+                      : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+                  }`}
+                >
+                  Dashboard
+                </button>
+                <button
+                  type="button"
+                  onClick={() => onDosenTabChange('asisten_ai')}
+                  className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 text-xs font-semibold rounded-md transition-all whitespace-nowrap ${
+                    dosenTab === 'asisten_ai'
+                      ? 'bg-indigo-600 text-white shadow-xs'
+                      : 'text-indigo-700 bg-indigo-50 hover:bg-indigo-100'
+                  }`}
+                >
+                  <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
+                  <span>Asisten AI</span>
+                </button>
               </div>
             )}
           </div>

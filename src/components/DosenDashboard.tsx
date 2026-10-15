@@ -37,6 +37,7 @@ interface DosenDashboardProps {
   onOpenCatatBimbingan: (studentId?: string) => void;
   onSelectStudentDetail: (student: Student) => void;
   onQuickVerifyRevision: (revisiId: string) => void;
+  onOpenAsistenAI?: () => void;
 }
 
 export const DosenDashboard: React.FC<DosenDashboardProps> = ({
@@ -48,6 +49,7 @@ export const DosenDashboard: React.FC<DosenDashboardProps> = ({
   onOpenCatatBimbingan,
   onSelectStudentDetail,
   onQuickVerifyRevision,
+  onOpenAsistenAI,
 }) => {
   const [filterStatus, setFilterStatus] = useState<'semua' | StatusBimbingan>('semua');
   const [filterTahap, setFilterTahap] = useState<'semua' | TahapSkripsi>('semua');
@@ -151,6 +153,31 @@ export const DosenDashboard: React.FC<DosenDashboardProps> = ({
           </button>
         </div>
       </div>
+
+      {/* AI Assistant Feature Banner */}
+      {onOpenAsistenAI && (
+        <div className="bg-gradient-to-r from-indigo-50 via-white to-indigo-50/40 p-4 rounded-xl border border-indigo-200/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs shadow-xs">
+          <div className="flex items-center gap-2.5 text-slate-800">
+            <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse shrink-0" />
+            <div>
+              <span className="font-bold text-indigo-950">
+                Fitur Baru: Asisten AI Dosen Pembimbing (3 Agent)
+              </span>
+              <p className="text-slate-500 text-[11px] mt-0.5">
+                Pengingat Proaktif · Briefing Mingguan Mahasiswa Prioritas · Pemeriksa Kepatuhan Revisi (Gemini 3.8 Flash).
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={onOpenAsistenAI}
+            className="px-3.5 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg text-xs transition-colors flex items-center gap-1.5 shrink-0 shadow-xs"
+          >
+            <span>Buka Tab Asisten AI</span>
+            <ChevronRight className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      )}
 
       {/* KPI Cards: Summary in 1 View + 1-Click Filter for NFR-1 */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">

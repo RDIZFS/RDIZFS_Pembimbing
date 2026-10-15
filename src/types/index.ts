@@ -54,3 +54,70 @@ export interface StatusDetail {
 }
 
 export type Role = 'dosen' | 'mahasiswa';
+
+// ==========================================
+// TIPE DATA UNTUK FITUR ASISTEN AI AGENT
+// ==========================================
+
+export type AgentName = 'Pengingat Proaktif' | 'Briefing Mingguan' | 'Pemeriksa Revisi';
+
+export type KeputusanDosen =
+  | 'Disetujui & Terkirim'
+  | 'Diedit & Terkirim'
+  | 'Ditolak'
+  | 'Ditinjau'
+  | 'Diverifikasi';
+
+export interface AgentLogEntry {
+  id: string;
+  timestamp: string; // YYYY-MM-DD HH:mm
+  agentName: AgentName;
+  action: string;
+  targetStudent?: string;
+  reason: string;
+  decision: KeputusanDosen;
+  notes?: string;
+}
+
+export interface ReminderDraft {
+  studentId: string;
+  nama: string;
+  nim: string;
+  subjek: string;
+  pesan: string;
+  urgensi: string;
+  statusPengiriman?: 'menunggu' | 'terkirim' | 'ditolak';
+}
+
+export interface WeeklyBriefingPriority {
+  studentId: string;
+  nama: string;
+  nim: string;
+  tahap: string;
+  alasan: string;
+  tindakan: string;
+  urgensi: string;
+}
+
+export interface WeeklyBriefing {
+  analisisKeseluruhan: string;
+  prioritasMahasiswa: WeeklyBriefingPriority[];
+  rekomendasiJadwal?: string;
+  generatedAt: string;
+}
+
+export interface RevisionChecklistItem {
+  poin: string;
+  status: 'Tampak terpenuhi' | 'Sebagian' | 'Belum terlihat';
+  alasan: string;
+}
+
+export interface RevisionAnalysis {
+  ringkasan: string;
+  catatanUmum: string;
+  checklist: RevisionChecklistItem[];
+  tugasRevisi?: string;
+  namaMahasiswa?: string;
+  generatedAt?: string;
+}
+

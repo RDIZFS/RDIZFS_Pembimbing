@@ -6,6 +6,7 @@
 import React, { useState, useEffect } from 'react';
 import { Header } from './components/Header';
 import { DosenDashboard } from './components/DosenDashboard';
+import { AsistenAIView } from './components/AsistenAIView';
 import { MahasiswaView } from './components/MahasiswaView';
 import { ModalCatatBimbingan } from './components/ModalCatatBimbingan';
 import { ModalMahasiswa } from './components/ModalMahasiswa';
@@ -15,9 +16,11 @@ import {
   INITIAL_STUDENTS,
   INITIAL_SESSIONS,
   INITIAL_REVISIONS,
+  INITIAL_AGENT_LOGS,
   DOSEN_NAME,
 } from './data/initialData';
 import {
+  AgentLogEntry,
   GuidanceSession,
   RevisiTask,
   Role,
@@ -29,10 +32,12 @@ import { CheckCircle2, Info } from 'lucide-react';
 const STORAGE_KEY_STUDENTS = 'bimbingan_skripsi_upi_students_v2';
 const STORAGE_KEY_SESSIONS = 'bimbingan_skripsi_upi_sessions_v2';
 const STORAGE_KEY_REVISIONS = 'bimbingan_skripsi_upi_revisions_v2';
+const STORAGE_KEY_AGENT_LOGS = 'bimbingan_skripsi_upi_agent_logs_v1';
 
 export default function App() {
   // Roles & View State
   const [currentRole, setCurrentRole] = useState<Role>('dosen');
+  const [dosenTab, setDosenTab] = useState<'dashboard' | 'asisten_ai'>('dashboard');
   const [selectedStudentId, setSelectedStudentId] = useState<string>('mhs-6'); // Default to Siti (has uploaded revision)
 
   // Core Data loaded from localStorage or initialized from dummy data
@@ -63,6 +68,15 @@ export default function App() {
     }
   });
 
+  const [agentLogs, setAgentLogs] = useState<AgentLogEntry[]>(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY_AGENT_LOGS);
+      return saved ? JSON.parse(saved) : INITIAL_AGENT_LOGS;
+    } catch {
+      return INITIAL_AGENT_LOGS;
+    }
+  });
+
   // Persist changes
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY_STUDENTS, JSON.stringify(students));
@@ -75,6 +89,21 @@ export default function App() {
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY_REVISIONS, JSON.stringify(revisions));
   }, [revisions]);
+
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEY_AGENT_LOGS, JSON.stringify(agentLogs));
+  }, [agentLogs]);
+
+  const handleAddAgentLog = (log: Omit<AgentLogEntry, 'id' | 'timestamp'>) => {
+    const now = new Date();
+    const ts = `${now.toISOString().split('T')[0]} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+    const newEntry: AgentLogEntry = {
+      id: `log-${Date.now()}`,
+      timestamp: ts,
+      ...log,
+    };
+    setAgentLogs((prev) => [newEntry, ...prev]);
+  };
 
   // Modal States
   const [isCatatBimbinganOpen, setIsCatatBimbinganOpen] = useState(false);
@@ -101,13 +130,15 @@ export default function App() {
 
   // Reset to default dummy data
   const handleResetData = () => {
-    if (window.confirm('Reset data ke kondisi awal dummy (9 mahasiswa, sesi bimbingan, dan revisi)?')) {
+    if (window.confirm('Reset data ke kondisi awal dummy (9 mahasiswa, sesi bimbingan, revisi, dan log agent)?')) {
       localStorage.removeItem(STORAGE_KEY_STUDENTS);
       localStorage.removeItem(STORAGE_KEY_SESSIONS);
       localStorage.removeItem(STORAGE_KEY_REVISIONS);
+      localStorage.removeItem(STORAGE_KEY_AGENT_LOGS);
       setStudents(INITIAL_STUDENTS);
       setSessions(INITIAL_SESSIONS);
       setRevisions(INITIAL_REVISIONS);
+      setAgentLogs(INITIAL_AGENT_LOGS);
       setSelectedStudentId(INITIAL_STUDENTS[0].id);
       setIsDetailModalOpen(false);
       showNotification('Data prototipe telah berhasil dikembalikan ke bawaan.', 'info');
@@ -293,6 +324,8 @@ export default function App() {
       <Header
         currentRole={currentRole}
         onRoleChange={setCurrentRole}
+        dosenTab={dosenTab}
+        onDosenTabChange={setDosenTab}
         selectedStudentId={selectedStudentId}
         onStudentChange={setSelectedStudentId}
         students={students}
@@ -310,16 +343,29 @@ export default function App() {
       {/* Main Content Area */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
         {currentRole === 'dosen' ? (
-          <DosenDashboard
-            students={students}
-            sessions={sessions}
-            revisions={revisions}
-            onOpenAddStudent={handleOpenAddStudent}
-            onOpenEditStudent={handleOpenEditStudent}
-            onOpenCatatBimbingan={handleOpenCatatBimbingan}
-            onSelectStudentDetail={handleSelectStudentDetail}
-            onQuickVerifyRevision={handleQuickVerify}
-          />
+          dosenTab === 'dashboard' ? (
+            <DosenDashboard
+              students={students}
+              sessions={sessions}
+              revisions={revisions}
+              onOpenAddStudent={handleOpenAddStudent}
+              onOpenEditStudent={handleOpenEditStudent}
+              onOpenCatatBimbingan={handleOpenCatatBimbingan}
+              onSelectStudentDetail={handleSelectStudentDetail}
+              onQuickVerifyRevision={handleQuickVerify}
+              onOpenAsistenAI={() => setDosenTab('asisten_ai')}
+            />
+          ) : (
+            <AsistenAIView
+              students={students}
+              sessions={sessions}
+              revisions={revisions}
+              agentLogs={agentLogs}
+              onAddAgentLog={handleAddAgentLog}
+              onVerifyRevision={handleVerifyRevision}
+              onSelectStudentDetail={handleSelectStudentDetail}
+            />
+          )
         ) : (
           <MahasiswaView
             student={activeStudent}

@@ -13,7 +13,7 @@ import {
   Check,
   Download,
 } from 'lucide-react';
-import { GuidanceSession, RevisiTask, Student } from '../types';
+import { GuidanceSession, RevisiTask, Student, RevisionAnalysis } from '../types';
 import {
   formatTanggalIndo,
   getStatusBadgeStyle,
@@ -45,6 +45,35 @@ export const ModalDetailMahasiswa: React.FC<ModalDetailMahasiswaProps> = ({
   const [activeTab, setActiveTab] = useState<'revisi' | 'riwayat'>('revisi');
   const [verifyingRevisiId, setVerifyingRevisiId] = useState<string | null>(null);
   const [catatanVerifikasi, setCatatanVerifikasi] = useState('');
+  const [analyzingRevisiId, setAnalyzingRevisiId] = useState<string | null>(null);
+  const [aiAnalysisMap, setAiAnalysisMap] = useState<Record<string, RevisionAnalysis>>({});
+  const [loadingAiId, setLoadingAiId] = useState<string | null>(null);
+
+  const handleRunAiInspection = async (rev: RevisiTask) => {
+    if (!student) return;
+    setLoadingAiId(rev.id);
+    try {
+      const res = await fetch('/api/agents/pemeriksa-revisi', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          tugasRevisi: rev.deskripsi,
+          namaMahasiswa: student.nama,
+          judulSkripsi: student.judul,
+          catatanMahasiswa: rev.filePerbaikan?.catatanMahasiswa || 'Berkas perbaikan telah diunggah.',
+        }),
+      });
+      const data = await res.json();
+      if (data.analysis) {
+        setAiAnalysisMap((prev) => ({ ...prev, [rev.id]: data.analysis }));
+        setAnalyzingRevisiId(rev.id);
+      }
+    } catch (err) {
+      console.error('Error running AI inspection:', err);
+    } finally {
+      setLoadingAiId(null);
+    }
+  };
 
   if (!isOpen || !student) return null;
 
@@ -209,45 +238,59 @@ export const ModalDetailMahasiswa: React.FC<ModalDetailMahasiswaProps> = ({
                           </span>
                         </div>
 
-                        {/* FR-5 Verification Action */}
-                        {!isVerified && (
-                          <div>
-                            {verifyingRevisiId === rev.id ? (
-                              <div className="flex items-center gap-2 mt-2 sm:mt-0">
-                                <input
-                                  type="text"
-                                  placeholder="Catatan verifikasi dosen..."
-                                  value={catatanVerifikasi}
-                                  onChange={(e) => setCatatanVerifikasi(e.target.value)}
-                                  className="text-xs bg-white border border-slate-300 rounded-md px-2.5 py-1 text-slate-900 focus:outline-hidden focus:ring-1 focus:ring-emerald-500"
-                                />
+                        {/* Actions: AI Check + FR-5 Verification Action */}
+                        <div className="flex items-center gap-2">
+                          {!isVerified && rev.filePerbaikan && (
+                            <button
+                              type="button"
+                              onClick={() => handleRunAiInspection(rev)}
+                              disabled={loadingAiId === rev.id}
+                              className="px-2.5 py-1 text-xs font-semibold text-indigo-700 hover:text-white bg-indigo-50 hover:bg-indigo-600 border border-indigo-200 rounded-md transition-colors flex items-center gap-1.5"
+                            >
+                              <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
+                              <span>{loadingAiId === rev.id ? 'Memeriksa AI...' : 'Periksa AI (Agent 3)'}</span>
+                            </button>
+                          )}
+
+                          {!isVerified && (
+                            <div>
+                              {verifyingRevisiId === rev.id ? (
+                                <div className="flex items-center gap-2 mt-2 sm:mt-0">
+                                  <input
+                                    type="text"
+                                    placeholder="Catatan verifikasi dosen..."
+                                    value={catatanVerifikasi}
+                                    onChange={(e) => setCatatanVerifikasi(e.target.value)}
+                                    className="text-xs bg-white border border-slate-300 rounded-md px-2.5 py-1 text-slate-900 focus:outline-hidden focus:ring-1 focus:ring-emerald-500"
+                                  />
+                                  <button
+                                    type="button"
+                                    onClick={() => handleConfirmVerification(rev.id)}
+                                    className="px-2.5 py-1 text-xs font-semibold text-white bg-emerald-600 hover:bg-emerald-700 rounded-md transition-colors"
+                                  >
+                                    Konfirmasi
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => setVerifyingRevisiId(null)}
+                                    className="px-2 py-1 text-xs text-slate-600 hover:text-slate-800"
+                                  >
+                                    Batal
+                                  </button>
+                                </div>
+                              ) : (
                                 <button
                                   type="button"
-                                  onClick={() => handleConfirmVerification(rev.id)}
-                                  className="px-2.5 py-1 text-xs font-semibold text-white bg-emerald-600 hover:bg-emerald-700 rounded-md transition-colors"
+                                  onClick={() => setVerifyingRevisiId(rev.id)}
+                                  className="px-3 py-1 text-xs font-semibold text-emerald-700 hover:text-white bg-emerald-50 hover:bg-emerald-600 border border-emerald-200 rounded-md transition-colors flex items-center gap-1.5"
                                 >
-                                  Konfirmasi
+                                  <ShieldCheck className="w-3.5 h-3.5" />
+                                  <span>Verifikasi Revisi (FR-5)</span>
                                 </button>
-                                <button
-                                  type="button"
-                                  onClick={() => setVerifyingRevisiId(null)}
-                                  className="px-2 py-1 text-xs text-slate-600 hover:text-slate-800"
-                                >
-                                  Batal
-                                </button>
-                              </div>
-                            ) : (
-                              <button
-                                type="button"
-                                onClick={() => setVerifyingRevisiId(rev.id)}
-                                className="px-3 py-1 text-xs font-semibold text-emerald-700 hover:text-white bg-emerald-50 hover:bg-emerald-600 border border-emerald-200 rounded-md transition-colors flex items-center gap-1.5"
-                              >
-                                <ShieldCheck className="w-3.5 h-3.5" />
-                                <span>Verifikasi Revisi (FR-5)</span>
-                              </button>
-                            )}
-                          </div>
-                        )}
+                              )}
+                            </div>
+                          )}
+                        </div>
                       </div>
 
                       <p className="text-xs text-slate-900 font-medium leading-relaxed">
@@ -271,6 +314,59 @@ export const ModalDetailMahasiswa: React.FC<ModalDetailMahasiswaProps> = ({
                               "{rev.filePerbaikan.catatanMahasiswa}"
                             </p>
                           )}
+                        </div>
+                      )}
+
+                      {/* AI Checklist Inspection Result (Agent 3) */}
+                      {aiAnalysisMap[rev.id] && (
+                        <div className="mt-3 p-3.5 bg-indigo-50/50 rounded-xl border border-indigo-200 text-xs space-y-2.5">
+                          <div className="flex items-center justify-between">
+                            <span className="font-bold text-indigo-950 flex items-center gap-1.5">
+                              <span className="w-2 h-2 rounded-full bg-indigo-600" />
+                              Checklist Kepatuhan Revisi (Agent 3)
+                            </span>
+                            <span className="text-[10px] bg-amber-100 text-amber-800 font-semibold px-2 py-0.5 rounded-sm">
+                              Dibuat oleh AI, perlu ditinjau dosen
+                            </span>
+                          </div>
+
+                          <p className="text-slate-700 text-[11.5px] leading-relaxed">
+                            {aiAnalysisMap[rev.id].ringkasan}
+                          </p>
+
+                          <div className="space-y-1.5 pt-1">
+                            {aiAnalysisMap[rev.id].checklist.map((item, idx) => {
+                              const isFulfilled = item.status === 'Tampak terpenuhi';
+                              const isPartial = item.status === 'Sebagian';
+                              return (
+                                <div key={idx} className="p-2 bg-white rounded-lg border border-indigo-100 space-y-0.5">
+                                  <div className="flex items-center justify-between gap-2">
+                                    <span className="font-semibold text-slate-800 text-[11px]">
+                                      {item.poin}
+                                    </span>
+                                    <span
+                                      className={`text-[10px] font-bold px-1.5 py-0.2 rounded-sm shrink-0 ${
+                                        isFulfilled
+                                          ? 'bg-emerald-100 text-emerald-800'
+                                          : isPartial
+                                          ? 'bg-amber-100 text-amber-800'
+                                          : 'bg-rose-100 text-rose-800'
+                                      }`}
+                                    >
+                                      {item.status}
+                                    </span>
+                                  </div>
+                                  <p className="text-[10.5px] text-slate-500">
+                                    {item.alasan}
+                                  </p>
+                                </div>
+                              );
+                            })}
+                          </div>
+
+                          <p className="text-[10.5px] text-indigo-900/80 italic border-t border-indigo-200/60 pt-1.5">
+                            Catatan: {aiAnalysisMap[rev.id].catatanUmum}
+                          </p>
                         </div>
                       )}
 
