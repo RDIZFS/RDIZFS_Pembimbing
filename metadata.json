@@ -1,0 +1,6 @@
+{
+  "name": "Dashboard Pemantauan Bimbingan Skripsi",
+  "description": "Prototipe sistem pemantauan bimbingan skripsi untuk dosen pembimbing dan mahasiswa, dengan pelacakan revisi, status otomatis, dan pencatatan sesi bimbingan.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
